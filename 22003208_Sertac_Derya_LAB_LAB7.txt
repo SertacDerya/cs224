@@ -1,0 +1,131 @@
+*/
+* Course No.: CS224
+* Lab No.: 7
+* Section No.: 3
+* Yavuz Alp Sencer ÖZTÜRK - 22002819
+* Sertaç Derya - 22003208
+/*
+
+A)	
+
+ Special Function Registers for the IO devices in Part 2-b
+PORT<portLetter>: This is used to read or write data from the port specified by the letter. The value 1 means high and 0 means low while writing data.
+
+We used:
+- Used PORTA as output to control DC Motor
+- Used PORTE to get input from push-buttons
+
+TRIS<portletter>: This is used to set the port as input or output. 1 means input and 0 means output
+
+We used:
+- Used TRISA set port A as output to control DC motor
+- Used TRISE set port E as input to get data from push-buttons
+
+B)
+
+/*
+* PART 2-B) DC Motor
+* Using PORTA for DC Motor, 5 Volt and pull up.
+* Using PORTE for push-buttons, 3.3V, pull up.
+*/
+
+void main() {
+
+ AD1PCFG = 0xFFFF; // Configure all analog pins as digital
+ DDPCON.JTAGEN = 0; // disable JTAG
+
+ TRISA = 0x0000; // PORTA (output) is used to control DC motor
+ PORTA = 0Xffff; // Default value
+
+ TRISE = 0xFFFF; //PORTE (input) is used to get input from push buttons
+ PORTE = 0X0000; // Default value
+
+   while(1) {
+   PORTABits.RA1 = PORTEBits.RE0; // Button 0 to control RE0
+   PORTABits.RA2 = PORTEBits.RE1; // Button 1 to control RE1
+
+   }
+}
+
+C)
+
+Special Function Registers for the IO devices in Part 2-c
+PORT<portLetter>: This is used to read or write data from the port specified by the letter. The value 1 means high and 0 means low while writing data.
+
+We used:
+- Used PORTA to display the number on the selected 7-segment digit
+- Used PORTE to select which digit will be activated 
+
+TRIS<portletter>: This is used to set the port as input or output. 1 means input and 0 means output
+
+We used:
+- Used TRISA set port A as output to send data to 7-segment
+- Used TRISE set port E as output to select which 7-segment will be active
+
+D)
+
+/*
+Configuration:
+
+To establish the connection:
+- Connect portA to the J1 port of the 4 Digit Seven Segment Module.
+  - Ensure that the jumpers of portA are set as follows: The top jumper should be connected to the left, and the other jumper to the right. Both jumpers should be connected to 5V and pulled down.
+
+- Connect portE to the J2 port of the 4 Digit Seven Segment Module.
+  - Similarly, set the jumpers of portE: Connect the top jumper to the left and the other jumper to the right. Both jumpers should be connected to 5V and pulled down.
+
+This configuration will enable the code to communicate correctly with the 4 Digit Seven Segment Module.
+*/
+
+
+// Hexadecimal values for digits in 7 segment
+unsigned char binary_pattern[]={0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F};
+
+int func(int x){ // Function to calculate x^3
+    return x*x*x;
+}
+
+
+void displayNumber(int num){
+     int timer = 0;
+     while(timer<250){ // Display number for (250ms)*4 = 1 second
+     // Fourth
+     PORTA=binary_pattern[num%10];     // Put number to the first digit
+     PORTE=0x08;                  // Open first digit
+     Delay_ms(1);
+
+     // Third
+     PORTA=binary_pattern[(num/10)%10];     // Put number to the second digit
+     PORTE=0x04;                  // Open second digit
+     Delay_ms(1);
+
+     // Second
+     PORTA=binary_pattern[(num/100)%10];     // Put number to the third digit
+     PORTE=0x02;                  // Open third digit
+     Delay_ms(1);
+
+     // First
+     PORTA=binary_pattern[(num/1000)%10];     //Put number to the fourth digit
+     PORTE=0x01;                  // Open fourth digit
+     Delay_ms(1);
+     timer++;
+     }
+}
+
+void main() {
+ AD1PCFG = 0xFFFF;      // Configure analog pins as digital
+ JTAGEN_bit = 0;        // Disable JTAG
+
+ TRISA = 0x00;  //PORTA is output to D
+ TRISE = 0X00;  //PORTE is output to AN
+
+ while(1)
+ {
+  int counter = 1;
+  while(counter<22){
+        int result = func(counter);
+        displayNumber(result);
+        counter++;
+  }
+ }
+}

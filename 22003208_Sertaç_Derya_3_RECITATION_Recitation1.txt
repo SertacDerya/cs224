@@ -1,0 +1,300 @@
+	.data
+array: .space 80
+prompt: .asciiz "You will need to enter 20 numbers."
+text1:  .asciiz "\nEnter a number: "
+text2: .asciiz "\nEnter a number n: "
+equalto_n: .asciiz "\nThe number of elements equal to n in the array is: "
+lessthan_n: .asciiz "\nThe number of elements less than n in the array is: "
+greaterthan_n: .asciiz "\nThe number of elements greater than n in the array is: "
+divisible_n: .asciiz "\nThe number of elements divisible to n in the array is: "
+     
+	.text
+.globl main
+
+main:
+	addi  $t1, $t1, 20 #loop amount
+	la $a0, prompt
+	li $v0, 4
+	syscall
+	la $a0, text1
+	la $t0, array #array adress
+	
+loop1:  li $v0, 4 #print
+	syscall
+	
+	addi $t1, $t1, -1 #decrease loop index
+	
+	li $v0, 5 #read input
+	syscall
+	
+	sw  $v0, ($t0) #load int into array
+	addi $t0, $t0, 4
+	
+	bge $t1, 1, loop1
+	
+	la $a0, text2
+	li $v0, 4
+	syscall
+	li $v0, 5
+	syscall
+	add $t2, $v0, 0 #number N
+	la $t0, array #array adress
+	li $t1, 20
+	#t4 = eq, t5 = lt, t6 = gt, t7 = divisible
+	
+loop2:  lw $t3, ($t0) #array element loaded
+	bne  $t3, $t2, lessthan
+	addi $t4, $t4, 1
+	addi $t7, $t7, 1
+	j default
+lessthan:bgt $t3, $t2, greaterthan
+	addi $t5, $t5, 1
+	j default
+greaterthan:addi $t6, $t6, 1
+	div $t3, $t2
+	mfhi $s0
+	bne $s0, 0, default
+	addi $t7, $t7, 1
+default:addi $t0, $t0, 4
+	addi $t1, $t1, -1
+	bne $t1, 0, loop2
+	
+	la $a0, equalto_n
+	li $v0, 4
+	syscall
+	add $a0, $t4, 0
+	li $v0, 1
+	syscall
+	
+	la $a0, lessthan_n
+	li $v0, 4
+	syscall
+	add $a0, $t5, 0
+	li $v0, 1
+	syscall
+	
+	la $a0, greaterthan_n
+	li $v0, 4
+	syscall
+	add $a0, $t6, 0
+	li $v0, 1
+	syscall
+	
+	la $a0, divisible_n
+	li $v0, 4
+	syscall
+	add $a0, $t7, 0
+	li $v0, 1
+	syscall
+
+li $v0, 5
+syscall
+addi $t0, $v0, 0 #first
+
+li $v0, 5
+syscall
+addi $t1, $v0, 0 #second
+
+addi $t3, $0, 3 #3
+
+addi $t2, $0, 2 #2
+
+mult $t1, $t2 # 2b
+
+mfhi $t2
+mflo $t2 #2b
+
+sub $t4, $t3, $t2#3-2b
+
+add $t5, $t1, $t0#a+b
+
+div $t4, $t5#3-2b / a+b
+
+mfhi $t6 #remainder
+mflo $t7 #quotient
+
+addi $a0, $t7, 15 #+15
+
+li $v0, 1
+syscall
+
+##
+## Program1.asm - prints out "hello world"
+##
+##	a0 - points to the string
+##
+
+#################################
+#					 	#
+#		text segment		#
+#						#
+#################################
+
+	.text		
+	.globl __start 
+
+__start:		# execution starts here
+	la $a0,str	# put string address into a0
+	li $v0,4	# system call to print
+	syscall		#   out a string
+
+	li $v0,10  # system call to exit
+	syscall	#    bye bye
+
+
+#################################
+#					 	#
+#     	 data segment		#
+#						#
+#################################
+
+	.data
+str:	.asciiz "0123hello world\n"
+n:	.word	10
+
+##
+## end of file Program1.asm
+
+##
+## Program2.asm asks user for temperature in Celsius,
+##  converts to Fahrenheit, prints the result.
+##
+##	v0 - reads in Celsius
+##	t0 - holds Fahrenheit result
+##	a0 - points to output strings
+##
+
+#################################
+#					 	#
+#		text segment		#
+#						#
+#################################
+
+	.text		
+	.globl __start	
+
+__start:
+	la $a0,prompt	# output prompt message on terminal
+	li $v0,4	# syscall 4 prints the string
+	syscall
+
+	li $v0, 5	# syscall 5 reads an integer
+	syscall
+
+	mul $t0,$v0,9	# to convert,multiply by 9, mul $t0, $t0, 9
+	div $t0,$t0,5	# divide by 5, then
+	add $t0,$t0,32	# add 32
+
+	la $a0,ans1	# print string before result
+	li $v0,4
+	syscall
+
+	move $a0,$t0	# print integer result
+	li $v0,1		# using syscall 1
+	syscall
+
+	la $a0,endl	# system call to print
+	li $v0,4		# out a newline
+	syscall
+
+	li $v0,10		# system call to exit
+	syscall		#    bye bye
+
+
+#################################
+#					 	#
+#     	 data segment		#
+#						#
+#################################
+
+	.data
+prompt:	.asciiz "Enter temperature (Celsius): "
+ans1:	.asciiz "The temperature in Fahrenheit is "
+endl:	.asciiz "\n"
+
+##
+## end of file Program2.asm
+
+##
+##	Program3.asm is a loop implementation
+##	of the Fibonacci function
+##        
+
+#################################
+#					 	#
+#		text segment		#
+#						#
+#################################
+
+	.text		
+.globl __start
+ 
+__start:		# execution starts here
+	li $a0,7	# to calculate fib(7)
+	jal fib		# call fib
+	move $a0,$v0	# print result
+	li $v0, 1
+	syscall
+
+	la $a0,endl	# print newline
+	li $v0,4
+	syscall
+
+	li $v0,100
+	syscall		# bye bye
+
+#------------------------------------------------
+
+
+fib:	move $v0,$a0	# initialise last element
+	blt $a0,2,done	# fib(0)=0, fib(1)=1
+
+	li $t0,0	# second last element
+	li $v0,1	# last element
+
+loop:	add $t1,$t0,$v0	# get next value
+	move $t0,$v0	# update second last
+	move $v0,$t1	# update last element
+	sub $a0,$a0,1	# decrement count
+	bgt $a0,1,loop	# exit loop when count=1
+	
+done:	jr $ra
+
+#################################
+#					 	#
+#     	 data segment		#
+#						#
+#################################
+
+	.data
+endl:	.asciiz "\n"
+
+##
+## end of Program3.asm
+
+
+li $v0, 5
+syscall
+addi $t0, $v0, 0 #first
+
+li $v0, 5
+syscall
+addi $t1, $v0, 0 #second
+
+add $t2, $t1, $t0
+
+addi $t2, $t2, 4
+
+addi $t3, $t3, 2
+
+mult $t3, $t0
+
+mfhi $t4
+mflo $t4
+
+div $t2, $t4
+
+mflo $a0
+
+li $v0, 1
+syscall
